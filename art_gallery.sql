@@ -883,3 +883,72 @@ BEGIN
     
 END //
 DELIMITER ;
+
+-- ========================================
+-- TRIGGERS
+-- ========================================
+
+-- Trigger: Update artist rating after review approval
+DELIMITER //
+CREATE TRIGGER trg_update_artist_rating_after_review
+AFTER UPDATE ON reviews
+FOR EACH ROW
+BEGIN
+    DECLARE v_artist_id INT;
+    DECLARE v_avg_rating DECIMAL(3,2);
+    
+    IF NEW.is_approved = TRUE AND OLD.is_approved = FALSE THEN
+        -- Get artist ID
+        SELECT artist_id INTO v_artist_id
+        FROM artworks
+        WHERE artwork_id = NEW.artwork_id;
+        
+        -- Calculate average rating
+        SELECT AVG(r.rating) INTO v_avg_rating
+        FROM reviews r
+        INNER JOIN artworks aw ON r.artwork_id = aw.artwork_id
+        WHERE aw.artist_id = v_artist_id AND r.is_approved = TRUE;
+        
+        -- Update artist
+        UPDATE artists
+        SET average_rating = COALESCE(v_avg_rating, 0)
+        WHERE artist_id = v_artist_id;
+    END IF;
+END //
+DELIMITER ;
+
+-- Trigger: Prevent deletion of sold artworks
+DELIMITER //
+CREATE TRIGGER trg_prevent_sold_artwork_deletion
+BEFORE DELETE ON artworks
+FOR EACH ROW
+BEGIN
+    IF OLD.availability_status = 'Sold' THEN
+        SIGNAL SQLSTATE '45000'
+        SET MESSAGE_TEXT = 'Cannot delete sold artworks';
+    END IF;
+END //
+DELIMITER ;
+
+-- Trigger: Update tag usage count
+DELIMITER //
+CREATE TRIGGER trg_update_tag_count_insert
+AFTER INSERT ON artwork_tags
+FOR EACH ROW
+BEGIN
+    UPDATE tags
+    SET usage_count = usage_count + 1
+    WHERE tag_id = NEW.tag_id;
+END //
+DELIMITER ;
+
+DELIMITER //
+CREATE TRIGGER trg_update_tag_count_delete
+AFTER DELETE ON artwork_tags
+FOR EACH ROW
+BEGIN
+    UPDATE tags
+    SET usage_count = usage_count - 1
+    WHERE tag_id = OLD.tag_id;
+END //
+DELIMITER ;
