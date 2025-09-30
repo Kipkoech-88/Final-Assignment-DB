@@ -748,3 +748,76 @@ LEFT JOIN exhibition_artworks ea ON e.exhibition_id = ea.exhibition_id
 LEFT JOIN exhibition_tickets et ON e.exhibition_id = et.exhibition_id AND et.payment_status = 'Paid'
 GROUP BY e.exhibition_id, e.exhibition_name, e.theme, g.gallery_name, 
          g.city, g.country, e.start_date, e.end_date, e.ticket_price, e.status;
+
+-- View: Commission Status Report
+CREATE OR REPLACE VIEW vw_commission_status AS
+SELECT 
+    cm.commission_id,
+    cm.commission_title,
+    CONCAT(c.first_name, ' ', c.last_name) AS customer_name,
+    ar.artist_name,
+    cm.budget_min,
+    cm.budget_max,
+    cm.agreed_price,
+    cm.preferred_medium,
+    cm.deadline_date,
+    cm.commission_status,
+    cm.request_date,
+    DATEDIFF(cm.deadline_date, CURDATE()) AS days_until_deadline
+FROM commissions cm
+INNER JOIN customers c ON cm.customer_id = c.customer_id
+INNER JOIN artists ar ON cm.artist_id = ar.artist_id
+WHERE cm.commission_status NOT IN ('Completed', 'Cancelled', 'Rejected')
+ORDER BY cm.deadline_date ASC;
+
+-- ========================================
+-- STORED PROCEDURES
+-- ========================================
+
+-- Procedure: Place a bid on an auction
+DELIMITER //
+CREATE PROCEDURE sp_place_bid(
+    IN p_auction_id INT,
+    IN p_customer_id INT,
+    IN p_bid_amount DECIMAL(12,2)
+)
+BEGIN
+    DECLARE v_current_bid DECIMAL(12,2);
+    DECLARE v_bid_increment DECIMAL(8,2);
+    DECLARE v_auction_status VARCHAR(20);
+    
+    -- Get auction details
+    SELECT current_bid, bid_increment, auction_status
+    INTO v_current_bid, v_bid_increment, v_auction_status
+    FROM auctions
+    WHERE auction_id = p_auction_id;
+    
+    -- Validate auction is active
+    IF v_auction_status != 'Active' THEN
+        SIGNAL SQLSTATE '45000'
+        SET MESSAGE_TEXT = 'Auction is not active';
+    END IF;
+    
+    -- Validate bid amount
+    IF p_bid_amount < v_current_bid + v_bid_increment THEN
+        SIGNAL SQLSTATE '45000'
+        SET MESSAGE_TEXT = 'Bid amount must be at least current bid plus increment';
+    END IF;
+    
+    -- Update previous winning bid
+    UPDATE bids 
+    SET is_winning_bid = FALSE, bid_status = 'Outbid'
+    WHERE auction_id = p_auction_id AND is_winning_bid = TRUE;
+    
+    -- Insert new bid
+    INSERT INTO bids (auction_id, customer_id, bid_amount, is_winning_bid, bid_status)
+    VALUES (p_auction_id, p_customer_id, p_bid_amount, TRUE, 'Active');
+    
+    -- Update auction
+    UPDATE auctions
+    SET current_bid = p_bid_amount,
+        total_bids = total_bids + 1
+    WHERE auction_id = p_auction_id;
+    
+END //
+DELIMITER ;
