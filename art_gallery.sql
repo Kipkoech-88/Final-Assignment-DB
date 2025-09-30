@@ -315,3 +315,87 @@ CREATE TABLE artist_followers (
     UNIQUE KEY unique_artist_customer (artist_id, customer_id),
     INDEX idx_artist (artist_id)
 );
+
+-- ========================================
+-- TABLE: commissions
+-- Custom artwork commission requests
+-- ========================================
+CREATE TABLE commissions (
+    commission_id INT AUTO_INCREMENT PRIMARY KEY,
+    customer_id INT NOT NULL,
+    artist_id INT NOT NULL,
+    commission_title VARCHAR(200) NOT NULL,
+    description TEXT NOT NULL,
+    budget_min DECIMAL(12,2),
+    budget_max DECIMAL(12,2),
+    preferred_medium VARCHAR(100),
+    dimensions VARCHAR(50),
+    deadline_date DATE,
+    commission_status ENUM('Requested', 'Under Review', 'Accepted', 'In Progress', 'Completed', 'Rejected', 'Cancelled') DEFAULT 'Requested',
+    agreed_price DECIMAL(12,2),
+    request_date DATE NOT NULL DEFAULT (CURRENT_DATE),
+    completion_date DATE,
+    notes TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (customer_id) REFERENCES customers(customer_id) ON DELETE CASCADE,
+    FOREIGN KEY (artist_id) REFERENCES artists(artist_id) ON DELETE CASCADE,
+    CHECK (budget_max >= budget_min),
+    INDEX idx_status (commission_status),
+    INDEX idx_artist (artist_id)
+);
+
+-- ========================================
+-- TABLE: messages
+-- Communication between customers and artists
+-- ========================================
+CREATE TABLE messages (
+    message_id INT AUTO_INCREMENT PRIMARY KEY,
+    sender_type ENUM('Customer', 'Artist', 'Admin') NOT NULL,
+    sender_id INT NOT NULL, -- References customer_id or artist_id
+    receiver_type ENUM('Customer', 'Artist', 'Admin') NOT NULL,
+    receiver_id INT NOT NULL,
+    subject VARCHAR(200),
+    message_text TEXT NOT NULL,
+    related_artwork_id INT NULL,
+    related_commission_id INT NULL,
+    is_read BOOLEAN DEFAULT FALSE,
+    sent_datetime DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    read_datetime DATETIME NULL,
+    FOREIGN KEY (related_artwork_id) REFERENCES artworks(artwork_id) ON DELETE SET NULL,
+    FOREIGN KEY (related_commission_id) REFERENCES commissions(commission_id) ON DELETE SET NULL,
+    INDEX idx_receiver (receiver_type, receiver_id, is_read),
+    INDEX idx_sent_date (sent_datetime)
+);
+
+-- ========================================
+-- TABLE: payment_methods
+-- Customer saved payment methods (One-to-Many)
+-- ========================================
+CREATE TABLE payment_methods (
+    payment_method_id INT AUTO_INCREMENT PRIMARY KEY,
+    customer_id INT NOT NULL,
+    payment_type ENUM('Credit Card', 'Debit Card', 'Bank Account', 'PayPal') NOT NULL,
+    card_last_four CHAR(4),
+    card_brand VARCHAR(20), -- Visa, Mastercard, etc.
+    expiry_month INT,
+    expiry_year INT,
+    billing_address VARCHAR(200),
+    is_default BOOLEAN DEFAULT FALSE,
+    is_active BOOLEAN DEFAULT TRUE,
+    added_date DATE NOT NULL DEFAULT (CURRENT_DATE),
+    FOREIGN KEY (customer_id) REFERENCES customers(customer_id) ON DELETE CASCADE,
+    INDEX idx_customer (customer_id),
+    CHECK (expiry_month BETWEEN 1 AND 12)
+);
+
+-- ========================================
+-- TABLE: artwork_tags
+-- Tags for categorizing artworks
+-- ========================================
+CREATE TABLE tags (
+    tag_id INT AUTO_INCREMENT PRIMARY KEY,
+    tag_name VARCHAR(50) UNIQUE NOT NULL,
+    usage_count INT DEFAULT 0,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
