@@ -821,3 +821,65 @@ BEGIN
     
 END //
 DELIMITER ;
+
+-- Procedure: Complete a sale
+DELIMITER //
+CREATE PROCEDURE sp_complete_sale(
+    IN p_artwork_id INT,
+    IN p_customer_id INT,
+    IN p_sale_price DECIMAL(12,2),
+    IN p_payment_method VARCHAR(50),
+    IN p_transaction_id VARCHAR(100)
+)
+BEGIN
+    DECLARE v_artist_id INT;
+    
+    -- Get artist ID
+    SELECT artist_id INTO v_artist_id
+    FROM artworks
+    WHERE artwork_id = p_artwork_id;
+    
+    -- Insert sale
+    INSERT INTO sales (artwork_id, customer_id, artist_id, sale_type, sale_price, 
+                      payment_method, payment_status, transaction_id)
+    VALUES (p_artwork_id, p_customer_id, v_artist_id, 'Direct Purchase', 
+            p_sale_price, p_payment_method, 'Completed', p_transaction_id);
+    
+    -- Update artwork status
+    UPDATE artworks
+    SET availability_status = 'Sold'
+    WHERE artwork_id = p_artwork_id;
+    
+    -- Update customer stats
+    UPDATE customers
+    SET total_purchases = total_purchases + 1,
+        total_spent = total_spent + p_sale_price
+    WHERE customer_id = p_customer_id;
+    
+    -- Update artist stats
+    UPDATE artists
+    SET total_artworks_sold = total_artworks_sold + 1
+    WHERE artist_id = v_artist_id;
+    
+END //
+DELIMITER ;
+
+-- Procedure: Add artwork to wishlist
+DELIMITER //
+CREATE PROCEDURE sp_add_to_wishlist(
+    IN p_customer_id INT,
+    IN p_artwork_id INT,
+    IN p_notes TEXT
+)
+BEGIN
+    -- Check if already in wishlist
+    IF EXISTS (SELECT 1 FROM wishlist WHERE customer_id = p_customer_id AND artwork_id = p_artwork_id) THEN
+        SIGNAL SQLSTATE '45000'
+        SET MESSAGE_TEXT = 'Artwork already in wishlist';
+    END IF;
+    
+    INSERT INTO wishlist (customer_id, artwork_id, notes)
+    VALUES (p_customer_id, p_artwork_id, p_notes);
+    
+END //
+DELIMITER ;
