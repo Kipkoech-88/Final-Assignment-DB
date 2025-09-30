@@ -539,3 +539,67 @@ INSERT INTO artwork_tags (artwork_id, tag_id) VALUES
 (5, 1), (5, 7),
 (6, 1), (6, 5), (6, 9),
 (7, 8), (7, 10);
+
+
+-- Insert Exhibitions
+INSERT INTO exhibitions (gallery_id, exhibition_name, theme, description, curator_name, start_date, end_date, ticket_price, status) VALUES
+(1, 'Colors of Emotion', 'Abstract Expressionism', 'Exploring human emotions through abstract art', 'Dr. Sarah Mitchell', '2025-02-01', '2025-03-31', 25.00, 'Upcoming'),
+(2, 'Digital Revolution', 'Future of Art', 'Celebrating digital artistry and innovation', 'Michael Zhang', '2024-11-01', '2025-01-31', 0.00, 'Active'),
+(3, 'Classical Meets Modern', 'Art Evolution', 'Bridging traditional and contemporary techniques', 'Pierre Rousseau', '2025-03-15', '2025-05-15', 30.00, 'Upcoming');
+
+-- Insert Exhibition Artworks
+INSERT INTO exhibition_artworks (exhibition_id, artwork_id, display_order) VALUES
+(1, 1, 1), (1, 6, 2),
+(2, 2, 1), (2, 7, 2),
+(3, 3, 1), (3, 5, 2);
+
+-- Insert Auctions
+INSERT INTO auctions (artwork_id, auction_title, starting_bid, reserve_price, current_bid, start_datetime, end_datetime, auction_type, auction_status) VALUES
+(6, 'Abstract Emotions - Live Auction', 5000.00, 6500.00, 5500.00, '2025-10-15 10:00:00', '2025-10-15 14:00:00', 'Live', 'Scheduled');
+
+-- Insert Bids
+INSERT INTO bids (auction_id, customer_id, bid_amount, is_winning_bid, bid_status) VALUES
+(1, 1, 5000.00, FALSE, 'Outbid'),
+(1, 4, 5500.00, TRUE, 'Active');
+
+-- Insert Sales
+INSERT INTO sales (artwork_id, customer_id, artist_id, sale_type, sale_price, payment_method, payment_status) VALUES
+(3, 4, 3, 'Direct Purchase', 8500.00, 'Bank Transfer', 'Completed'),
+(5, 2, 5, 'Direct Purchase', 3200.00, 'Credit Card', 'Completed');
+
+-- Insert Reviews
+INSERT INTO reviews (artwork_id, customer_id, rating, review_title, review_text, is_verified_purchase, is_approved) VALUES
+(3, 4, 5, 'Absolutely Stunning!', 'The portrait exceeded my expectations. The detail and color work are exceptional.', TRUE, TRUE),
+(5, 2, 4, 'Beautiful Landscape', 'Lovely watercolor with vibrant colors. Perfect for my living room.', TRUE, TRUE);
+
+-- Insert Wishlist
+INSERT INTO wishlist (customer_id, artwork_id, notes) VALUES
+(1, 1, 'Waiting for salary to purchase'),
+(2, 4, 'Perfect for office entrance'),
+(3, 2, 'Interested in digital art collection');
+
+-- Insert Artist Followers
+INSERT INTO artist_followers (artist_id, customer_id) VALUES
+(1, 1), (1, 4),
+(2, 1), (2, 3),
+(3, 4), (3, 2),
+(5, 2);
+
+-- Insert Commissions
+INSERT INTO commissions (customer_id, artist_id, commission_title, description, budget_min, budget_max, preferred_medium, commission_status) VALUES
+(1, 1, 'Custom Abstract for Office', 'Looking for a large abstract piece with blue and gold tones', 4000.00, 6000.00, 'Acrylic on Canvas', 'Under Review'),
+(5, 2, 'Digital Portrait', 'Digital artwork of my family in futuristic style', 2000.00, 3000.00, 'Digital', 'Accepted');
+
+-- Insert Payment Methods
+INSERT INTO payment_methods (customer_id, payment_type, card_last_four, card_brand, expiry_month, expiry_year, is_default) VALUES
+(1, 'Credit Card', '4532', 'Visa', 12, 2027, TRUE),
+(2, 'Credit Card', '5412', 'Mastercard', 8, 2026, TRUE),
+(4, 'PayPal', NULL, NULL, NULL, NULL, TRUE),
+(5, 'Credit Card', '3782', 'Amex', 6, 2028, TRUE);
+
+-- Insert Shipping Addresses
+INSERT INTO shipping_addresses (customer_id, address_label, recipient_name, address_line1, city, state_province, country, postal_code, phone, is_default) VALUES
+(1, 'Home', 'Robert Johnson', '456 Sunset Boulevard', 'Los Angeles', 'California', 'USA', '90028', '+1-555-1001', TRUE),
+(2, 'Office', 'Emma Williams', '78 Baker Street', 'London', NULL, 'UK', 'W1U 6AG', '+44-555-1002', TRUE),
+(4, 'Home', 'Isabella Garcia', 'Calle Mayor 25', 'Madrid', NULL, 'Spain', '28013', '+34-555-1004', TRUE),
+(5, 'Home', 'Yuki Tanaka', 'Shibuya 2-21-1', 'Tokyo', NULL, 'Japan', '150-0002', '+81-555-1005', TRUE);
