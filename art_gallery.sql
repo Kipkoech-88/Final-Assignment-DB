@@ -399,3 +399,81 @@ CREATE TABLE tags (
     usage_count INT DEFAULT 0,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
+
+-- ========================================
+-- TABLE: artwork_tags (Many-to-Many junction table)
+-- Links artworks with tags
+-- ========================================
+CREATE TABLE artwork_tags (
+    artwork_tag_id INT AUTO_INCREMENT PRIMARY KEY,
+    artwork_id INT NOT NULL,
+    tag_id INT NOT NULL,
+    added_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (artwork_id) REFERENCES artworks(artwork_id) ON DELETE CASCADE,
+    FOREIGN KEY (tag_id) REFERENCES tags(tag_id) ON DELETE CASCADE,
+    UNIQUE KEY unique_artwork_tag (artwork_id, tag_id)
+);
+
+-- ========================================
+-- TABLE: shipping_addresses
+-- Customer shipping addresses (One-to-Many)
+-- ========================================
+CREATE TABLE shipping_addresses (
+    address_id INT AUTO_INCREMENT PRIMARY KEY,
+    customer_id INT NOT NULL,
+    address_label VARCHAR(50), -- e.g., "Home", "Office"
+    recipient_name VARCHAR(100) NOT NULL,
+    address_line1 VARCHAR(150) NOT NULL,
+    address_line2 VARCHAR(150),
+    city VARCHAR(50) NOT NULL,
+    state_province VARCHAR(50),
+    country VARCHAR(50) NOT NULL,
+    postal_code VARCHAR(20) NOT NULL,
+    phone VARCHAR(20),
+    is_default BOOLEAN DEFAULT FALSE,
+    is_active BOOLEAN DEFAULT TRUE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (customer_id) REFERENCES customers(customer_id) ON DELETE CASCADE,
+    INDEX idx_customer (customer_id)
+);
+
+-- ========================================
+-- TABLE: artist_social_media
+-- Artist social media profiles (One-to-Many)
+-- ========================================
+CREATE TABLE artist_social_media (
+    social_id INT AUTO_INCREMENT PRIMARY KEY,
+    artist_id INT NOT NULL,
+    platform VARCHAR(50) NOT NULL, -- Instagram, Twitter, Facebook, etc.
+    profile_url VARCHAR(255) NOT NULL,
+    follower_count INT DEFAULT 0,
+    is_verified BOOLEAN DEFAULT FALSE,
+    added_date DATE NOT NULL DEFAULT (CURRENT_DATE),
+    FOREIGN KEY (artist_id) REFERENCES artists(artist_id) ON DELETE CASCADE,
+    UNIQUE KEY unique_artist_platform (artist_id, platform)
+);
+
+-- ========================================
+-- TABLE: exhibition_tickets
+-- Tickets for physical exhibitions (One-to-Many)
+-- ========================================
+CREATE TABLE exhibition_tickets (
+    ticket_id INT AUTO_INCREMENT PRIMARY KEY,
+    exhibition_id INT NOT NULL,
+    customer_id INT NOT NULL,
+    ticket_type ENUM('General', 'VIP', 'Student', 'Group', 'Complimentary') NOT NULL,
+    ticket_price DECIMAL(8,2) NOT NULL,
+    quantity INT NOT NULL DEFAULT 1,
+    purchase_date DATE NOT NULL DEFAULT (CURRENT_DATE),
+    visit_date DATE,
+    ticket_code VARCHAR(50) UNIQUE NOT NULL,
+    is_used BOOLEAN DEFAULT FALSE,
+    payment_status ENUM('Pending', 'Paid', 'Refunded') DEFAULT 'Pending',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (exhibition_id) REFERENCES exhibitions(exhibition_id) ON DELETE CASCADE,
+    FOREIGN KEY (customer_id) REFERENCES customers(customer_id) ON DELETE CASCADE,
+    CHECK (quantity > 0),
+    INDEX idx_exhibition (exhibition_id),
+    INDEX idx_customer (customer_id)
+);
