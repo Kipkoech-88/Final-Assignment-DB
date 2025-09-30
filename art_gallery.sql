@@ -626,3 +626,59 @@ INSERT INTO messages (sender_type, sender_id, receiver_type, receiver_id, subjec
 ('Artist', 1, 'Customer', 1, 'Re: Question about Crimson Dreams', 'Thank you! Yes, it will be on display at the Colors of Emotion exhibition in February. You are welcome to view it there.', 1, FALSE),
 ('Customer', 4, 'Artist', 3, 'Thank you for the portrait', 'Sophie, the Portrait of Elegance arrived safely. It is absolutely beautiful and looks perfect in my home. Thank you so much!', 3, TRUE),
 ('Customer', 1, 'Artist', 1, 'Commission Discussion', 'Hi Elena, I would like to discuss the custom abstract piece for my office. When can we schedule a consultation?', NULL, FALSE);
+
+
+-- ========================================
+-- ADVANCED QUERIES AND VIEWS
+-- ========================================
+
+-- View: Artist Performance Dashboard
+CREATE OR REPLACE VIEW vw_artist_performance AS
+SELECT 
+    a.artist_id,
+    a.artist_name,
+    a.country,
+    a.specialization,
+    COUNT(DISTINCT aw.artwork_id) AS total_artworks,
+    COUNT(DISTINCT s.sale_id) AS total_sales,
+    COALESCE(SUM(s.artist_earnings), 0) AS total_earnings,
+    COALESCE(AVG(r.rating), 0) AS average_rating,
+    COUNT(DISTINCT af.customer_id) AS total_followers,
+    a.verification_status
+FROM artists a
+LEFT JOIN artworks aw ON a.artist_id = aw.artist_id
+LEFT JOIN sales s ON a.artist_id = s.artist_id AND s.payment_status = 'Completed'
+LEFT JOIN reviews r ON aw.artwork_id = r.artwork_id AND r.is_approved = TRUE
+LEFT JOIN artist_followers af ON a.artist_id = af.artist_id
+WHERE a.is_active = TRUE
+GROUP BY a.artist_id, a.artist_name, a.country, a.specialization, a.verification_status;
+
+-- View: Available Artworks Catalog
+CREATE OR REPLACE VIEW vw_available_artworks AS
+SELECT 
+    aw.artwork_id,
+    aw.title,
+    ar.artist_name,
+    c.category_name,
+    aw.medium,
+    aw.dimensions,
+    aw.year_created,
+    aw.artwork_type,
+    aw.current_price,
+    aw.availability_status,
+    aw.is_featured,
+    COALESCE(AVG(r.rating), 0) AS average_rating,
+    COUNT(DISTINCT r.review_id) AS review_count,
+    COUNT(DISTINCT w.wishlist_id) AS wishlist_count,
+    GROUP_CONCAT(DISTINCT t.tag_name ORDER BY t.tag_name SEPARATOR ', ') AS tags
+FROM artworks aw
+INNER JOIN artists ar ON aw.artist_id = ar.artist_id
+INNER JOIN categories c ON aw.category_id = c.category_id
+LEFT JOIN reviews r ON aw.artwork_id = r.artwork_id AND r.is_approved = TRUE
+LEFT JOIN wishlist w ON aw.artwork_id = w.artwork_id
+LEFT JOIN artwork_tags awt ON aw.artwork_id = awt.artwork_id
+LEFT JOIN tags t ON awt.tag_id = t.tag_id
+WHERE aw.is_active = TRUE AND aw.availability_status IN ('Available', 'In Auction')
+GROUP BY aw.artwork_id, aw.title, ar.artist_name, c.category_name, 
+         aw.medium, aw.dimensions, aw.year_created, aw.artwork_type, 
+         aw.current_price, aw.availability_status, aw.is_featured;
