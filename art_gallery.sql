@@ -477,3 +477,65 @@ CREATE TABLE exhibition_tickets (
     INDEX idx_exhibition (exhibition_id),
     INDEX idx_customer (customer_id)
 );
+
+
+-- ========================================
+-- SAMPLE DATA INSERTION
+-- ========================================
+
+-- Insert Categories
+INSERT INTO categories (category_name, description, parent_category_id) VALUES
+('Abstract', 'Non-representational art focusing on colors, shapes, and forms', NULL),
+('Portrait', 'Artwork depicting people', NULL),
+('Landscape', 'Natural scenery depictions', NULL),
+('Digital Art', 'Computer-generated or digitally created artwork', NULL),
+('Sculpture', 'Three-dimensional artworks', NULL),
+('Contemporary', 'Modern art from late 20th century onwards', 1),
+('Impressionism', 'Art characterized by visible brush strokes and light', 3);
+
+-- Insert Artists
+INSERT INTO artists (first_name, last_name, artist_name, email, phone, country, city, biography, specialization, verification_status) VALUES
+('Elena', 'Martinez', 'Elena Martinez', 'elena.martinez@artmail.com', '+1-555-0101', 'Spain', 'Barcelona', 'Award-winning contemporary artist known for vibrant abstract compositions', 'Abstract', 'Verified'),
+('James', 'Chen', 'J.Chen Arts', 'james.chen@artmail.com', '+1-555-0102', 'USA', 'New York', 'Digital artist specializing in surreal landscapes and futuristic themes', 'Digital Art', 'Verified'),
+('Sophie', 'Dubois', 'Sophie D.', 'sophie.dubois@artmail.com', '+33-555-0103', 'France', 'Paris', 'Classical portrait artist with modern techniques', 'Portrait', 'Verified'),
+('Raj', 'Kumar', 'Raj Kumar Studio', 'raj.kumar@artmail.com', '+91-555-0104', 'India', 'Mumbai', 'Sculptor working with bronze and mixed media', 'Sculpture', 'Pending'),
+('Maria', 'Silva', 'Maria Silva Art', 'maria.silva@artmail.com', '+55-555-0105', 'Brazil', 'Rio de Janeiro', 'Landscape painter inspired by tropical environments', 'Landscape', 'Verified');
+
+-- Insert Customers
+INSERT INTO customers (first_name, last_name, email, phone, city, country, membership_tier) VALUES
+('Robert', 'Johnson', 'robert.j@email.com', '+1-555-1001', 'Los Angeles', 'USA', 'Gold'),
+('Emma', 'Williams', 'emma.w@email.com', '+44-555-1002', 'London', 'UK', 'Silver'),
+('Lucas', 'Brown', 'lucas.b@email.com', '+61-555-1003', 'Sydney', 'Australia', 'Bronze'),
+('Isabella', 'Garcia', 'isabella.g@email.com', '+34-555-1004', 'Madrid', 'Spain', 'Platinum'),
+('Yuki', 'Tanaka', 'yuki.t@email.com', '+81-555-1005', 'Tokyo', 'Japan', 'Gold');
+
+-- Insert Galleries
+INSERT INTO galleries (gallery_name, gallery_type, city, country, phone, email, opening_date) VALUES
+('Modern Arts Gallery', 'Physical', 'New York', 'USA', '+1-555-2001', 'info@modernarts.com', '2015-06-15'),
+('Virtual Canvas', 'Virtual', 'Online', 'International', '+1-555-2002', 'contact@virtualcanvas.com', '2020-01-10'),
+('European Fine Arts', 'Hybrid', 'Paris', 'France', '+33-555-2003', 'hello@europeanfinearts.fr', '2010-03-20');
+
+-- Insert Artworks
+INSERT INTO artworks (artist_id, category_id, title, description, medium, dimensions, year_created, artwork_type, base_price, current_price, availability_status, is_featured) VALUES
+(1, 1, 'Crimson Dreams', 'A vibrant abstract piece exploring the boundaries of color', 'Acrylic on Canvas', '36x48 inches', 2024, 'Original', 5500.00, 5500.00, 'Available', TRUE),
+(2, 4, 'Digital Horizons', 'Futuristic cityscape with neon elements', 'Digital Print', '24x36 inches', 2024, 'Print', 1200.00, 1200.00, 'Available', TRUE),
+(3, 2, 'Portrait of Elegance', 'Classical portrait with modern color palette', 'Oil on Canvas', '30x40 inches', 2023, 'Original', 8500.00, 8500.00, 'Available', FALSE),
+(4, 5, 'Bronze Warrior', 'Contemporary sculpture depicting strength', 'Bronze', '24 inches tall', 2024, 'Sculpture', 15000.00, 15000.00, 'Available', TRUE),
+(5, 3, 'Tropical Sunset', 'Vibrant landscape of Brazilian coastline', 'Watercolor', '20x30 inches', 2024, 'Original', 3200.00, 3200.00, 'Available', FALSE),
+(1, 6, 'Abstract Emotions', 'Contemporary exploration of human feelings through color', 'Mixed Media', '40x50 inches', 2024, 'Original', 6800.00, 6800.00, 'In Auction', TRUE),
+(2, 4, 'Cyber City Nights', 'Limited edition digital artwork', 'Digital Print', '30x40 inches', 2024, 'Print', 1800.00, 1800.00, 'Available', FALSE);
+
+-- Insert Tags
+INSERT INTO tags (tag_name) VALUES
+('vibrant'), ('modern'), ('colorful'), ('minimalist'), ('expressive'), 
+('geometric'), ('nature'), ('urban'), ('emotional'), ('futuristic');
+
+-- Insert Artwork Tags
+INSERT INTO artwork_tags (artwork_id, tag_id) VALUES
+(1, 1), (1, 2), (1, 5),
+(2, 8), (2, 10), (2, 2),
+(3, 9), (3, 4),
+(4, 2), (4, 6),
+(5, 1), (5, 7),
+(6, 1), (6, 5), (6, 9),
+(7, 8), (7, 10);
