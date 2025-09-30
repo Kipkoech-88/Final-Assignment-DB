@@ -603,3 +603,26 @@ INSERT INTO shipping_addresses (customer_id, address_label, recipient_name, addr
 (2, 'Office', 'Emma Williams', '78 Baker Street', 'London', NULL, 'UK', 'W1U 6AG', '+44-555-1002', TRUE),
 (4, 'Home', 'Isabella Garcia', 'Calle Mayor 25', 'Madrid', NULL, 'Spain', '28013', '+34-555-1004', TRUE),
 (5, 'Home', 'Yuki Tanaka', 'Shibuya 2-21-1', 'Tokyo', NULL, 'Japan', '150-0002', '+81-555-1005', TRUE);
+
+-- Insert Artist Social Media
+INSERT INTO artist_social_media (artist_id, platform, profile_url, follower_count, is_verified) VALUES
+(1, 'Instagram', 'https://instagram.com/elenamartinezart', 125000, TRUE),
+(1, 'Twitter', 'https://twitter.com/elenamartinezart', 45000, FALSE),
+(2, 'Instagram', 'https://instagram.com/jchenarts', 89000, TRUE),
+(2, 'Behance', 'https://behance.net/jameschen', 34000, TRUE),
+(3, 'Instagram', 'https://instagram.com/sophiedart', 67000, TRUE),
+(5, 'Instagram', 'https://instagram.com/mariasilvaart', 52000, FALSE);
+
+-- Insert Exhibition Tickets
+INSERT INTO exhibition_tickets (exhibition_id, customer_id, ticket_type, ticket_price, quantity, ticket_code, payment_status) VALUES
+(1, 1, 'General', 25.00, 2, 'TICK-2025-001', 'Paid'),
+(1, 4, 'VIP', 50.00, 1, 'TICK-2025-002', 'Paid'),
+(2, 2, 'General', 0.00, 1, 'TICK-2025-003', 'Paid'),
+(3, 5, 'General', 30.00, 3, 'TICK-2025-004', 'Pending');
+
+-- Insert Messages
+INSERT INTO messages (sender_type, sender_id, receiver_type, receiver_id, subject, message_text, related_artwork_id, is_read) VALUES
+('Customer', 1, 'Artist', 1, 'Question about Crimson Dreams', 'Hi Elena, I love your work! Is this piece available for viewing in person?', 1, TRUE),
+('Artist', 1, 'Customer', 1, 'Re: Question about Crimson Dreams', 'Thank you! Yes, it will be on display at the Colors of Emotion exhibition in February. You are welcome to view it there.', 1, FALSE),
+('Customer', 4, 'Artist', 3, 'Thank you for the portrait', 'Sophie, the Portrait of Elegance arrived safely. It is absolutely beautiful and looks perfect in my home. Thank you so much!', 3, TRUE),
+('Customer', 1, 'Artist', 1, 'Commission Discussion', 'Hi Elena, I would like to discuss the custom abstract piece for my office. When can we schedule a consultation?', NULL, FALSE);
