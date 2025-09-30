@@ -133,3 +133,94 @@ CREATE TABLE galleries (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
+
+
+-- ========================================
+-- TABLE: exhibitions
+-- Art exhibitions and shows
+-- ========================================
+CREATE TABLE exhibitions (
+    exhibition_id INT AUTO_INCREMENT PRIMARY KEY,
+    gallery_id INT NOT NULL,
+    exhibition_name VARCHAR(200) NOT NULL,
+    theme VARCHAR(150),
+    description TEXT,
+    curator_name VARCHAR(100),
+    start_date DATE NOT NULL,
+    end_date DATE NOT NULL,
+    opening_hours VARCHAR(100), -- e.g., "Mon-Fri: 9AM-6PM"
+    ticket_price DECIMAL(8,2) DEFAULT 0.00,
+    max_visitors INT,
+    total_visitors INT DEFAULT 0,
+    status ENUM('Upcoming', 'Active', 'Completed', 'Cancelled') DEFAULT 'Upcoming',
+    is_virtual BOOLEAN DEFAULT FALSE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (gallery_id) REFERENCES galleries(gallery_id) ON DELETE CASCADE,
+    CHECK (end_date >= start_date),
+    INDEX idx_dates (start_date, end_date),
+    INDEX idx_status (status)
+);
+
+-- ========================================
+-- TABLE: exhibition_artworks
+-- Many-to-Many relationship between exhibitions and artworks
+-- ========================================
+CREATE TABLE exhibition_artworks (
+    exhibition_artwork_id INT AUTO_INCREMENT PRIMARY KEY,
+    exhibition_id INT NOT NULL,
+    artwork_id INT NOT NULL,
+    display_order INT DEFAULT 1,
+    special_notes TEXT,
+    added_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (exhibition_id) REFERENCES exhibitions(exhibition_id) ON DELETE CASCADE,
+    FOREIGN KEY (artwork_id) REFERENCES artworks(artwork_id) ON DELETE CASCADE,
+    UNIQUE KEY unique_exhibition_artwork (exhibition_id, artwork_id)
+);
+
+-- ========================================
+-- TABLE: auctions
+-- Auction events for artworks
+-- ========================================
+CREATE TABLE auctions (
+    auction_id INT AUTO_INCREMENT PRIMARY KEY,
+    artwork_id INT UNIQUE NOT NULL,
+    auction_title VARCHAR(200) NOT NULL,
+    starting_bid DECIMAL(12,2) NOT NULL,
+    reserve_price DECIMAL(12,2), -- Minimum acceptable price
+    current_bid DECIMAL(12,2) NOT NULL DEFAULT 0.00,
+    bid_increment DECIMAL(8,2) NOT NULL DEFAULT 100.00,
+    total_bids INT DEFAULT 0,
+    start_datetime DATETIME NOT NULL,
+    end_datetime DATETIME NOT NULL,
+    auction_type ENUM('Live', 'Online', 'Silent') DEFAULT 'Online',
+    auction_status ENUM('Scheduled', 'Active', 'Completed', 'Cancelled') DEFAULT 'Scheduled',
+    winner_customer_id INT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (artwork_id) REFERENCES artworks(artwork_id) ON DELETE CASCADE,
+    FOREIGN KEY (winner_customer_id) REFERENCES customers(customer_id) ON DELETE SET NULL,
+    CHECK (end_datetime > start_datetime),
+    CHECK (current_bid >= starting_bid),
+    INDEX idx_dates (start_datetime, end_datetime),
+    INDEX idx_status (auction_status)
+);
+
+-- ========================================
+-- TABLE: bids
+-- Individual bids placed on auctions
+-- ========================================
+CREATE TABLE bids (
+    bid_id INT AUTO_INCREMENT PRIMARY KEY,
+    auction_id INT NOT NULL,
+    customer_id INT NOT NULL,
+    bid_amount DECIMAL(12,2) NOT NULL,
+    bid_datetime DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    is_winning_bid BOOLEAN DEFAULT FALSE,
+    bid_status ENUM('Active', 'Outbid', 'Won', 'Withdrawn') DEFAULT 'Active',
+    notes TEXT,
+    FOREIGN KEY (auction_id) REFERENCES auctions(auction_id) ON DELETE CASCADE,
+    FOREIGN KEY (customer_id) REFERENCES customers(customer_id) ON DELETE CASCADE,
+    INDEX idx_auction_customer (auction_id, customer_id),
+    INDEX idx_bid_amount (bid_amount DESC)
+);
