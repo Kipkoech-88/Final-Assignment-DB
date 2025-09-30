@@ -682,3 +682,69 @@ WHERE aw.is_active = TRUE AND aw.availability_status IN ('Available', 'In Auctio
 GROUP BY aw.artwork_id, aw.title, ar.artist_name, c.category_name, 
          aw.medium, aw.dimensions, aw.year_created, aw.artwork_type, 
          aw.current_price, aw.availability_status, aw.is_featured;
+
+-- View: Customer Purchase History
+CREATE OR REPLACE VIEW vw_customer_purchases AS
+SELECT 
+    c.customer_id,
+    CONCAT(c.first_name, ' ', c.last_name) AS customer_name,
+    c.email,
+    c.membership_tier,
+    s.sale_id,
+    aw.title AS artwork_title,
+    ar.artist_name,
+    s.sale_price,
+    s.sale_date,
+    s.payment_status,
+    s.shipping_status
+FROM customers c
+INNER JOIN sales s ON c.customer_id = s.customer_id
+INNER JOIN artworks aw ON s.artwork_id = aw.artwork_id
+INNER JOIN artists ar ON aw.artist_id = ar.artist_id
+WHERE c.is_active = TRUE
+ORDER BY s.sale_date DESC;
+
+-- View: Active Auctions
+CREATE OR REPLACE VIEW vw_active_auctions AS
+SELECT 
+    auc.auction_id,
+    auc.auction_title,
+    aw.title AS artwork_title,
+    ar.artist_name,
+    auc.starting_bid,
+    auc.current_bid,
+    auc.reserve_price,
+    auc.total_bids,
+    auc.start_datetime,
+    auc.end_datetime,
+    auc.auction_type,
+    auc.auction_status,
+    TIMESTAMPDIFF(HOUR, NOW(), auc.end_datetime) AS hours_remaining
+FROM auctions auc
+INNER JOIN artworks aw ON auc.artwork_id = aw.artwork_id
+INNER JOIN artists ar ON aw.artist_id = ar.artist_id
+WHERE auc.auction_status IN ('Scheduled', 'Active')
+ORDER BY auc.end_datetime ASC;
+
+-- View: Exhibition Details
+CREATE OR REPLACE VIEW vw_exhibition_details AS
+SELECT 
+    e.exhibition_id,
+    e.exhibition_name,
+    e.theme,
+    g.gallery_name,
+    g.city AS gallery_city,
+    g.country AS gallery_country,
+    e.start_date,
+    e.end_date,
+    e.ticket_price,
+    e.status,
+    COUNT(DISTINCT ea.artwork_id) AS total_artworks,
+    COUNT(DISTINCT et.ticket_id) AS tickets_sold,
+    COALESCE(SUM(et.quantity), 0) AS total_visitors_expected
+FROM exhibitions e
+INNER JOIN galleries g ON e.gallery_id = g.gallery_id
+LEFT JOIN exhibition_artworks ea ON e.exhibition_id = ea.exhibition_id
+LEFT JOIN exhibition_tickets et ON e.exhibition_id = et.exhibition_id AND et.payment_status = 'Paid'
+GROUP BY e.exhibition_id, e.exhibition_name, e.theme, g.gallery_name, 
+         g.city, g.country, e.start_date, e.end_date, e.ticket_price, e.status;
