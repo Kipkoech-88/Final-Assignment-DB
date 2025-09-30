@@ -224,3 +224,94 @@ CREATE TABLE bids (
     INDEX idx_auction_customer (auction_id, customer_id),
     INDEX idx_bid_amount (bid_amount DESC)
 );
+
+-- ========================================
+-- TABLE: sales
+-- Direct sales and auction wins
+-- ========================================
+CREATE TABLE sales (
+    sale_id INT AUTO_INCREMENT PRIMARY KEY,
+    artwork_id INT NOT NULL,
+    customer_id INT NOT NULL,
+    artist_id INT NOT NULL,
+    sale_type ENUM('Direct Purchase', 'Auction Win', 'Commission') NOT NULL,
+    sale_price DECIMAL(12,2) NOT NULL,
+    commission_rate DECIMAL(5,2) DEFAULT 15.00, -- Platform commission %
+    commission_amount DECIMAL(12,2) GENERATED ALWAYS AS (sale_price * commission_rate / 100) STORED,
+    artist_earnings DECIMAL(12,2) GENERATED ALWAYS AS (sale_price - (sale_price * commission_rate / 100)) STORED,
+    sale_date DATE NOT NULL DEFAULT (CURRENT_DATE),
+    payment_method ENUM('Credit Card', 'Bank Transfer', 'PayPal', 'Cryptocurrency', 'Wire Transfer') NOT NULL,
+    payment_status ENUM('Pending', 'Completed', 'Failed', 'Refunded') DEFAULT 'Pending',
+    transaction_id VARCHAR(100) UNIQUE,
+    shipping_required BOOLEAN DEFAULT TRUE,
+    shipping_status ENUM('Not Shipped', 'Processing', 'Shipped', 'Delivered', 'Returned') DEFAULT 'Not Shipped',
+    tracking_number VARCHAR(100),
+    delivery_date DATE,
+    notes TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (artwork_id) REFERENCES artworks(artwork_id) ON DELETE RESTRICT,
+    FOREIGN KEY (customer_id) REFERENCES customers(customer_id) ON DELETE RESTRICT,
+    FOREIGN KEY (artist_id) REFERENCES artists(artist_id) ON DELETE RESTRICT,
+    INDEX idx_customer (customer_id),
+    INDEX idx_artist (artist_id),
+    INDEX idx_sale_date (sale_date),
+    INDEX idx_payment_status (payment_status)
+);
+
+-- ========================================
+-- TABLE: reviews
+-- Customer reviews for artworks and artists
+-- ========================================
+CREATE TABLE reviews (
+    review_id INT AUTO_INCREMENT PRIMARY KEY,
+    artwork_id INT NOT NULL,
+    customer_id INT NOT NULL,
+    rating INT NOT NULL,
+    review_title VARCHAR(150),
+    review_text TEXT,
+    review_date DATE NOT NULL DEFAULT (CURRENT_DATE),
+    is_verified_purchase BOOLEAN DEFAULT FALSE,
+    helpful_count INT DEFAULT 0,
+    is_approved BOOLEAN DEFAULT FALSE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (artwork_id) REFERENCES artworks(artwork_id) ON DELETE CASCADE,
+    FOREIGN KEY (customer_id) REFERENCES customers(customer_id) ON DELETE CASCADE,
+    CHECK (rating BETWEEN 1 AND 5),
+    UNIQUE KEY unique_customer_artwork_review (customer_id, artwork_id),
+    INDEX idx_artwork_rating (artwork_id, rating)
+);
+
+-- ========================================
+-- TABLE: wishlist
+-- Customer wishlist for artworks
+-- ========================================
+CREATE TABLE wishlist (
+    wishlist_id INT AUTO_INCREMENT PRIMARY KEY,
+    customer_id INT NOT NULL,
+    artwork_id INT NOT NULL,
+    added_date DATE NOT NULL DEFAULT (CURRENT_DATE),
+    notes TEXT,
+    notify_on_discount BOOLEAN DEFAULT TRUE,
+    FOREIGN KEY (customer_id) REFERENCES customers(customer_id) ON DELETE CASCADE,
+    FOREIGN KEY (artwork_id) REFERENCES artworks(artwork_id) ON DELETE CASCADE,
+    UNIQUE KEY unique_customer_artwork (customer_id, artwork_id),
+    INDEX idx_customer (customer_id)
+);
+
+-- ========================================
+-- TABLE: artist_followers
+-- Customers following artists
+-- ========================================
+CREATE TABLE artist_followers (
+    follower_id INT AUTO_INCREMENT PRIMARY KEY,
+    artist_id INT NOT NULL,
+    customer_id INT NOT NULL,
+    follow_date DATE NOT NULL DEFAULT (CURRENT_DATE),
+    notification_enabled BOOLEAN DEFAULT TRUE,
+    FOREIGN KEY (artist_id) REFERENCES artists(artist_id) ON DELETE CASCADE,
+    FOREIGN KEY (customer_id) REFERENCES customers(customer_id) ON DELETE CASCADE,
+    UNIQUE KEY unique_artist_customer (artist_id, customer_id),
+    INDEX idx_artist (artist_id)
+);
